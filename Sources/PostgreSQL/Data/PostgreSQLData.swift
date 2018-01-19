@@ -19,6 +19,7 @@ public enum PostgreSQLData {
     case point(x: Double, y: Double)
 
     case uuid(UUID)
+    case json(Data)
 
     case dictionary([String: PostgreSQLData])
     case array([PostgreSQLData])
@@ -26,25 +27,25 @@ public enum PostgreSQLData {
     case null
 }
 
-extension PostgreSQLData: Codable {
-    /// See `Decodable.init(from:)`
-    public init(from decoder: Decoder) throws {
-        if let dict = try? [String: PostgreSQLData](from: decoder) {
-            self = .dictionary(dict)
-        } else if let arr = try? [PostgreSQLData](from: decoder) {
-            self = .array(arr)
-        } else if let double = try? Double(from: decoder) {
-            self = .double(double)
-        } else if let int = try? Int(from: decoder) {
-            self = .int64(Int64(int))
-        } else if let bool = try? Bool(from: decoder) {
-            self = .bool(bool)
-        } else if let string = try? String(from: decoder) {
-            self = .string(string)
-        } else {
-            throw PostgreSQLError(identifier: "decode", reason: "Cannot decode PostgreSQL data")
-        }
-    }
+extension PostgreSQLData: Encodable {
+//    /// See `Decodable.init(from:)`
+//    public init(from decoder: Decoder) throws {
+//        if let dict = try? [String: PostgreSQLData](from: decoder) {
+//            self = .dictionary(dict)
+//        } else if let arr = try? [PostgreSQLData](from: decoder) {
+//            self = .array(arr)
+//        } else if let double = try? Double(from: decoder) {
+//            self = .double(double)
+//        } else if let int = try? Int(from: decoder) {
+//            self = .int64(Int64(int))
+//        } else if let bool = try? Bool(from: decoder) {
+//            self = .bool(bool)
+//        } else if let string = try? String(from: decoder) {
+//            self = .string(string)
+//        } else {
+//            throw PostgreSQLError(identifier: "decode", reason: "Cannot decode PostgreSQL data")
+//        }
+//    }
 
     /// See `Encodable.encode`
     public func encode(to encoder: Encoder) throws {
@@ -62,6 +63,7 @@ extension PostgreSQLData: Codable {
         case .uuid(let value): try value.encode(to: encoder)
         case .array(let value): try value.encode(to: encoder)
         case .dictionary(let value): try value.encode(to: encoder)
+        case .json(let value): try value.encode(to: encoder)
         case .point: throw PostgreSQLError(identifier: "encode", reason: "Cannot encode point: \(self)")
         case .null:
             var single = encoder.singleValueContainer()
@@ -178,6 +180,7 @@ extension PostgreSQLData: CustomStringConvertible {
         case .dictionary(let d): return d.description
         case .array(let a): return a.description
         case .uuid(let uuid): return "\(uuid) (uuid)"
+        case .json(let json): return "\(String(data: json, encoding: .utf8) ?? "") (json)"
         case .null: return "null"
         }
     }

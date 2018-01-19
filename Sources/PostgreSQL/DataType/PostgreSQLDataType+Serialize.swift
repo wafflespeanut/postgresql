@@ -16,6 +16,7 @@ extension PostgreSQLData {
         case .date(let date): serialized = Data(date.description.utf8)
         case .dictionary(let dict): serialized = try JSONEncoder().encode(dict)
         case .array(let arr): serialized = try JSONEncoder().encode(arr)
+        case .json(let data): serialized = data
         case .string, .null, .int8, .int16, .int32, .int64, .double, .float, .data, .point, .bool, .uuid:
             fatalError("Unsupported serialize text: \(self)")
         }
@@ -42,7 +43,7 @@ extension PostgreSQLData {
         case .uuid(var uuid): serialized = withUnsafePointer(to: &uuid) {
                 Data(bytes: $0, count: MemoryLayout.size(ofValue: uuid))
             }
-        case .date, .dictionary, .array:
+        case .date, .dictionary, .array, .json:
             fatalError("Unsupported serialize binary: \(self)")
         }
         return serialized

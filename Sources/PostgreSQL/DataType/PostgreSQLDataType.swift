@@ -64,6 +64,7 @@ extension PostgreSQLDataType {
         case .uuid: return .uuid
         case .dictionary: return .jsonb
         case .array: return .jsonb
+        case .json: return .jsonb
         }
     }
 }

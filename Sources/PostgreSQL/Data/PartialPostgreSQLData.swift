@@ -1,3 +1,5 @@
+import Foundation
+
 /// Reference wrapper for `PostgreSQLData` being mutated
 /// by the PostgreSQL data coders.
 final class PartialPostgreSQLData {
@@ -132,7 +134,9 @@ extension PartialPostgreSQLData {
     func requireDecodable<D>(_ value: D.Type = D.self, at path: [CodingKey]) throws -> D
         where D: Decodable
     {
-        if let convertible = D.self as? PostgreSQLDataCustomConvertible.Type {
+        if let value = get(at: path), case .json(let data) = value {
+            return try JSONDecoder().decode(D.self, from: data)
+        } else if let convertible = D.self as? PostgreSQLDataCustomConvertible.Type {
             let data = try requireGet(D.self, at: path)
             return try convertible.convertFromPostgreSQLData(from: data) as! D
         } else {
